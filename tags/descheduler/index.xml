@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Posts on Qingwei Blog</title>
-    <link>https://qingwei9.github.io/post/</link>
-    <description>Recent content in Posts on Qingwei Blog</description>
+    <title>Descheduler on Qingwei Blog</title>
+    <link>https://qingwei9.github.io/tags/descheduler/</link>
+    <description>Recent content in Descheduler on Qingwei Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 04 Nov 2017 12:00:00 +0000</lastBuildDate><atom:link href="https://qingwei9.github.io/post/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sat, 04 Nov 2017 12:00:00 +0000</lastBuildDate><atom:link href="https://qingwei9.github.io/tags/descheduler/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Istio及Bookinfo示例程序安装试用笔记</title>
       <link>https://qingwei9.github.io/2021/08/07/descheduler_study/</link>
