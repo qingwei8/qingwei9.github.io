@@ -5,7 +5,17 @@
     <link>https://zhaohuabing.com/</link>
     <description>Recent content on Qingwei Blog</description>
     <generator>Hugo -- gohugo.io</generator>
-    <language>en-us</language><atom:link href="https://zhaohuabing.com/index.xml" rel="self" type="application/rss+xml" />
+    <language>en-us</language>
+    <lastBuildDate>Sat, 04 Nov 2017 12:00:00 +0000</lastBuildDate><atom:link href="https://zhaohuabing.com/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Istio及Bookinfo示例程序安装试用笔记</title>
+      <link>https://zhaohuabing.com/2017/11/04/istio-install_and_example/</link>
+      <pubDate>Sat, 04 Nov 2017 12:00:00 +0000</pubDate>
+      
+      <guid>https://zhaohuabing.com/2017/11/04/istio-install_and_example/</guid>
+      <description>Descheduler 1. 资源平衡策略 1.1. RemoveDuplicates 1.2. LowNodeUtilization 1.3. HighNodeUtilization 1.4. RemovePodsViolatingInterPodAntiAffinity 1.5. RemovePodsViolatingNodeAffinity 1.6. RemovePodsViolatingNodeTaints 1.7. RemovePodsViolatingTopologySpreadConstraint 1.8. RemovePodsHavingTooManyRestarts 1.9. PodLifeTime 2. Pods 过滤参数详解 2.1. Namespace 过滤 2.2. Priority 优先级过滤 2.3. Label 标签过滤 2.4. Node fit 过滤 3. Pod 驱逐说明 4. 其他： Descheduler 基于 descheduler</description>
+    </item>
+    
     <item>
       <title></title>
       <link>https://zhaohuabing.com/search/placeholder/</link>
