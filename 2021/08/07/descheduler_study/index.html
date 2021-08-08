@@ -1,20 +1,1313 @@
-<div style="position: fixed; right:5px;max-width:300px; overflow:auto; top: 100px; width: 10vw; bottom:50px">
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    
+    <meta property="og:site_name" content="Qingwei Blog">
+    <meta property="og:type" content="article">
+
+    
+    <meta property="og:image" content="https://qingwei9.github.io//img/home-bg-jeep.jpg">
+    <meta property="twitter:image" content="https://qingwei9.github.io//img/home-bg-jeep.jpg" />
+    
+
+    
+    <meta name="title" content="Descheduler 资源再平衡" />
+    <meta property="og:title" content="Descheduler 资源再平衡" />
+    <meta property="twitter:title" content="Descheduler 资源再平衡" />
+    
+
+    
+    <meta name="description" content="目前从事于某互联网大厂从事 kubernetes、Serverless">
+    <meta property="og:description" content="目前从事于某互联网大厂从事 kubernetes、Serverless" />
+    <meta property="twitter:description" content="目前从事于某互联网大厂从事 kubernetes、Serverless" />
+    
+
+    
+    <meta property="twitter:card" content="summary" />
+    
+    
+
+    <meta name="keyword"  content="qingwei, qingwei的网络日志, qingwei的博客, qingwei Blog, 博客, 个人网站, 互联网, Web, 云原生, PaaS, Kubernetes, Serverless, 弹性伸缩">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>Descheduler 资源再平衡-qingwei的博客 | qingwei&#39;s Blog</title>
+
+    <link rel="canonical" href="/2021/08/07/descheduler_study/">
+
+    <link rel="stylesheet" href="/css/iDisqus.min.css"/>
+
+    
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    
+    <link rel="stylesheet" href="/css/hux-blog.min.css">
+
+    
+    <link rel="stylesheet" href="/css/zanshang.css">
+
+    
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" rel="stylesheet" type="text/css">
+
+    
+    
+
+    
+    
+    <script src="/js/jquery.min.js"></script>
+
+    
+    <script src="/js/bootstrap.min.js"></script>
+
+    
+    <script src="/js/hux-blog.min.js"></script>
+
+    
+    
+
+</head>
 
 
 
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Qingwei Blog</a>
+        </div>
+
+        
+        
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                        
+                        <li>
+                            <a href="/categories/tech">tech</a>
+                        </li>
+                        
+                    
+                    
+		    
+                        <li><a href="/top/books/">BOOKS</a></li>
+                    
+                        <li><a href="/top/about/">ABOUT</a></li>
+                    
+
+                    
+		    <li>
+                        <a href="/search">SEARCH <img src="/img/search.png" height="15" style="cursor: pointer;" alt="Search"></a>
+		    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        
+    </div>
+    
+</nav>
+<script>
+    
+    
+    
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        
+            $navbar.className = " ";
+            
+            setTimeout(function(){
+                
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+
+
+<style type="text/css">
+    header.intro-header {
+        background-image: url('https://img.zhaohuabing.com/in-post/istio-install_and_example/post-bg.jpg')
+    }
+</style>
+<header class="intro-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/descheduler" title="Descheduler">
+                            Descheduler
+                        </a>
+                        
+                    </div>
+                    <h1>Descheduler 资源再平衡</h1>
+                    <h2 class="subheading"></h2>
+                    <span class="meta">
+                        Posted by 
+                        
+                            qingwei
+                         
+                        on 
+                        Saturday, August 7, 2021
+                        
+                        
+                        
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+
+
+<article>
+    <div class="container">
+        <div class="row">
+
+            
+            <div class="
+                col-lg-11 col-lg-offset-1
+                col-md-10 col-md-offset-1
+                post-container">
+
+                
+                <header>
+                    <h2>TOC</h2>
+                </header>
+                <nav id="TableOfContents">
+  <ul>
+    <li><a href="#descheduler">Descheduler</a>
+      <ul>
+        <li><a href="#1-资源平衡策略">1. 资源平衡策略</a></li>
+        <li><a href="#2-pods-过滤参数详解">2. Pods 过滤参数详解</a></li>
+        <li><a href="#3-pod-驱逐说明">3. Pod 驱逐说明</a></li>
+        <li><a href="#4-其他">4. 其他：</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+                
+                <ul>
+<li><a href="#descheduler">Descheduler</a>
+<ul>
+<li><a href="#1-%E8%B5%84%E6%BA%90%E5%B9%B3%E8%A1%A1%E7%AD%96%E7%95%A5">1. 资源平衡策略</a>
+<ul>
+<li><a href="#11-removeduplicates">1.1. RemoveDuplicates</a></li>
+<li><a href="#12-lownodeutilization">1.2. LowNodeUtilization</a></li>
+<li><a href="#13-highnodeutilization">1.3. HighNodeUtilization</a></li>
+<li><a href="#14-removepodsviolatinginterpodantiaffinity">1.4. RemovePodsViolatingInterPodAntiAffinity</a></li>
+<li><a href="#15-removepodsviolatingnodeaffinity">1.5. RemovePodsViolatingNodeAffinity</a></li>
+<li><a href="#16-removepodsviolatingnodetaints">1.6. RemovePodsViolatingNodeTaints</a></li>
+<li><a href="#17-removepodsviolatingtopologyspreadconstraint">1.7. RemovePodsViolatingTopologySpreadConstraint</a></li>
+<li><a href="#18-removepodshavingtoomanyrestarts">1.8. RemovePodsHavingTooManyRestarts</a></li>
+<li><a href="#19-podlifetime">1.9. PodLifeTime</a></li>
+</ul>
+</li>
+<li><a href="#2-pods-%E8%BF%87%E6%BB%A4%E5%8F%82%E6%95%B0%E8%AF%A6%E8%A7%A3">2. Pods 过滤参数详解</a>
+<ul>
+<li><a href="#21-namespace-%E8%BF%87%E6%BB%A4">2.1. Namespace 过滤</a></li>
+<li><a href="#22-priority-%E4%BC%98%E5%85%88%E7%BA%A7%E8%BF%87%E6%BB%A4">2.2. Priority 优先级过滤</a></li>
+<li><a href="#23-label-%E6%A0%87%E7%AD%BE%E8%BF%87%E6%BB%A4">2.3. Label 标签过滤</a></li>
+<li><a href="#24-node-fit-%E8%BF%87%E6%BB%A4">2.4. Node fit 过滤</a></li>
+</ul>
+</li>
+<li><a href="#3-pod-%E9%A9%B1%E9%80%90%E8%AF%B4%E6%98%8E">3. Pod 驱逐说明</a></li>
+<li><a href="#4-%E5%85%B6%E4%BB%96">4. 其他：</a></li>
+</ul>
+</li>
+</ul>
+<hr>
+<h1 id="descheduler">Descheduler</h1>
+<p><a href="https://github.com/kubernetes-sigs/descheduler/tree/master">基于 descheduler v0.21.0</a></p>
+<h2 id="1-资源平衡策略">1. 资源平衡策略</h2>
+<p>基于当前版本 <code>v0.21.0</code>，Descheduler 已实现了 9种策略用于 kubernetes 集群的资源再平衡。</p>
+<ul>
+<li>RemoveDuplicates</li>
+<li>LowNodeUtilization</li>
+<li>HighNodeUtilization</li>
+<li>RemovePodsViolatingInterPodAntiAffinity</li>
+<li>RemovePodsViolatingNodeAffinity</li>
+<li>RemovePodsViolatingNodeTaints</li>
+<li>RemovePodsViolatingTopologySpreadConstraint</li>
+<li>RemovePodsHavingTooManyRestarts</li>
+<li>PodLifeTime</li>
+</ul>
+<p>这些策略包含一些共同的配置，分别如下：</p>
+<ul>
+<li><strong>nodeSelector</strong>：节点标签选择器，用来限制 descheduler 可在带有该标签的节点下进行处理，即限制 descheduler 驱逐在哪些节点上的 pod。</li>
+<li><strong>evictLocalStoragePods</strong>：当值为 <code>true</code> 时，表示允许驱逐挂有 local storage 卷的 pods。默认为 <code>false</code>。</li>
+<li><strong>evictSystemCriticalPods</strong>：当值为 <code>true</code> 时，会驱逐 kubernetes 中 kube-system 命名空间下以及任意优先级(priority)的系统关键 pod，这个操作很危险，不建议开启。默认为 <code>false</code>。</li>
+<li><strong>ignorePvcPods</strong>：值为 <code>true</code> 不会（即忽略）驱逐挂载 pvc 卷的 pods。默认值为 <code>false</code>，即默认会驱逐挂载 pvc 的 pods。</li>
+<li><strong>maxNoOfPodsToEvictPerNode</strong>：每个 node 可驱逐 pods 数量的最大值。pods 数量为各个策略统计的 pods 数量的总和。</li>
+</ul>
+<pre><code>apiVersion: &quot;descheduler/v1alpha1&quot;
+kind: &quot;DeschedulerPolicy&quot;
+nodeSelector: prod=dev
+evictLocalStoragePods: true
+evictSystemCriticalPods: true
+maxNoOfPodsToEvictPerNode: 40  // 设置可驱逐的 pod 数量的最大值，保证一次不能驱逐太多，导致集群不稳定
+ignorePvcPods: false
+strategies:
+  ...
+
+</code></pre><h3 id="11-removeduplicates">1.1. RemoveDuplicates</h3>
+<p>该策略可以确保在同一个 node 节点上只会运行<strong>一个</strong>相关联的 <strong>pod</strong>（这些 pods被同属一个相关的控制器（如 RS、RC、StatefulSet or Job）资源所管理，以下以 RS 为例），即同一个 RS 下的所有 pod 在集群中的所有节点中最多只有一个 pod 会运行在同一个 node 节点上。如果某个 node 节点上出现了同一个 RS 的多个 pod，则会将多余的 pod 驱逐掉，仅保留一个 pod 在该 node 节点上运行。该策略的应用场景为，当集群中的某些 node 因为不可知的原因导致硬件故障等下线后，该 node 节点上的 pod 会被调度到其他节点上（这时其他节点上可能会存在多个同属于一个 RS 的 pod 位于同一个 node 节点上），等待 node 重新上线后，该策略会驱逐其他节点中多余的 pod 并将驱逐的 pod 重新调度到 node 节点上。</p>
+<p>参数：</p>
+<ul>
+<li>
+<p>可选参数：<code>excludeOwerKinds</code> 列表类型，被参数中的所有 OwerRef 相关的 Kinds 所管理的 pods 不会被驱逐。但需<strong>注意：该策略会驱逐被 Deployment 所创建的 pod。如果需要 Deployment 所创建的 pod 不被驱逐，需要在参数中指定 ReplicaSet，而不是 Deployment。</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">Name</th>
+<th style="text-align:center">Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">excludeOwerKinds</td>
+<td style="text-align:center">list(string)</td>
+</tr>
+</tbody>
+</table>
+<pre><code>apiVersion: &quot;descheduler/v1alpha1&quot;
+kind: &quot;DeschedulerPolicy&quot;
+strategies:
+  &quot;RemoveDuplicates&quot;:
+    enabled: true
+    params:
+      removeDuplicates:
+        excludeOwnerKinds:
+        - &quot;ReplicaSet&quot;
+</code></pre></li>
+<li>
+<p>过滤型参数</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">Name</th>
+<th style="text-align:center">Type</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">namespaces</td>
+<td style="text-align:center">list</td>
+<td>支持 include 和 exclude 两种过滤策略</td>
+</tr>
+<tr>
+<td style="text-align:center">thresholdPriority</td>
+<td style="text-align:center">int</td>
+<td>直接指定驱逐优先级</td>
+</tr>
+<tr>
+<td style="text-align:center">thresholdPriorityClassName</td>
+<td style="text-align:center">string</td>
+<td>通过 k8s 的 priorityClass 来指点，如果 k8s 没有创建 priorityClass 会报错</td>
+</tr>
+<tr>
+<td style="text-align:center">nodeFit</td>
+<td style="text-align:center">bool</td>
+<td>true 为开启，开启时会优化驱逐调度，即会考虑 pod 是否满足驱逐条件，驱逐后是否有 node 可适合运行，如果没有则不会驱逐</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<h3 id="12-lownodeutilization">1.2. LowNodeUtilization</h3>
+<p>该策略会查找整个集群中 <code>未充分利用的节点</code>，并将其他 <code>高利用的节点</code> 中的一些 pod 驱逐并最终在这些 <code>未充分利用的节点</code> 上重建 pod。该策略的参数在 <code>nodeResourceUtilizationThresholds</code> 下配置。其中，还有另外两个非常关键的参数 <code>thresholds</code> 和 <code>targetThresholds</code>。</p>
+<ul>
+<li><code>thresholds</code>: 指定资源阀值（cpu/mem/pod 数量/gpu/其他可计算的资源），用来确定哪些节点是 <strong>未充分利用的节点</strong>。如果节点中的<strong>所有</strong>相关资源利用率<strong>都低于</strong> <code>thresholds</code> 中所指定资源的阀值，则可认为该节点为 <code>未充分利用的节点</code>。其中 pod 中 cpu/mem 等资源的值通过 k8s 中的 request 字段的值来进行计算。</li>
+<li><code>targetThresholds</code>：用来确定哪些节点是<strong>高利用率的节点</strong>，是可被驱逐的。当节点中的<strong>任一</strong>相关资源利用率<strong>高于</strong> <code>targetThresholds</code> 中指定的阀值时，则可认为该节点是 <code>高利用率的节点</code>，节点上的 pod 可以被驱逐。</li>
+</ul>
+<p>当节点的所有资源利用率位于 <code>thresholds</code> 和 <code>targetThresholds</code> 时，则可认为该节点的利用率是合理的，节点上的 pod 将不会被驱逐。该策略的驱逐方向是从 <code>高利用率的的节点</code> 中驱逐 pod，并最终在 <code>未充分利用的节点</code> 上重建出 pod；且当 <code>高利用率的节点</code> 或者 <code>未充分利用的节点</code> 的节点数中有一个为 0 时将不再执行驱逐策略驱逐 pod。</p>
+<p>参数：</p>
+<ul>
+<li>
+<p>普通参数：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">Name</th>
+<th style="text-align:center">Type</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">thresholds</td>
+<td style="text-align:center">map[string]int</td>
+<td style="text-align:left">设定阀值，确定 <code>未充分利用的节点</code> 的界限</td>
+</tr>
+<tr>
+<td style="text-align:center">targetThresholds</td>
+<td style="text-align:center">map[srting]int</td>
+<td style="text-align:left">设定阀值，确定 <code>高利用率的节点</code> 的界限</td>
+</tr>
+<tr>
+<td style="text-align:center">numberOfNodes</td>
+<td style="text-align:center">int</td>
+<td style="text-align:left">用来在大集群中来决定是否开启 <code>LowNodeUtilization</code> 策略的阀值，如果 numberOfNodes 不为 0 时，则当集群中 <code>未充分利用的节点</code> 大于 numberOfNodes 的值时会开启该策略；反之，不开启该策略。默认 numberOfNodes 为 0</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>
+<p>过滤型参数：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">Name</th>
+<th style="text-align:center">Type</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">thresholdPriority</td>
+<td style="text-align:center">int</td>
+<td style="text-align:left">同上</td>
+</tr>
+<tr>
+<td style="text-align:center">thresholdPriorityClassName</td>
+<td style="text-align:center">string</td>
+<td style="text-align:left">同上</td>
+</tr>
+<tr>
+<td style="text-align:center">nodeFit</td>
+<td style="text-align:center">bool</td>
+<td style="text-align:left">同上</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<p>说明：</p>
+<ul>
+<li><code>Descheduler</code> 内部原生支持三种资源类型：cpu、memory 以及 pods 数量。如果其中有资源类型的值没有指定，则默认设置为 100%，目的是避免将 <code>未充分利用的节点</code> 误统计为 <code>高利用的节点</code>。</li>
+<li><code>Descheduler</code> 也支持可选择的扩展资源，比如支持 GPU 数量类型的资源 <code>nvidia.com/gpu</code>。如果指定了扩展资源，则 node 的节点的总资源利用率会将扩展资源算进去，如果没有指定扩展资源，则不会将该资源统计进去。</li>
+<li>阀值选项 <code>thresholds</code> 和 <code>targetThresholds</code> 中的值不能为空，且对同一种资源指定要么全指定值要么全不指定值。</li>
+<li>阀值选项 <code>thresholds</code> 和 <code>targetThresholds</code> 中对同一种资源中的值中，<code>thresholds</code> 的值必须小于或者等于（不能大于）<code>targetThresholds</code> 的对应类型资源的值。</li>
+<li>阀值选项 <code>thresholds</code> 和 <code>targetThresholds</code> 中的资源类型的值必须为百分比值，且值必须位于 [0,100] 中。</li>
+<li>numberOfNodes：参数用来触发是否开启该策略，如果 <code>未充分利用的节点数</code> 大于 numberOfNodes 时，将激活该策略，启动驱逐功能。否则，不启动该策略，numberOfNodes 的默认值为 0。</li>
+<li>该策略是将 pod 从 <code>高利用率的节点</code> 上往 <code>低利用率的节点</code> 调，会让整个集群的整体资源平衡利用。</li>
+</ul>
+<p>例子：</p>
+<pre><code>apiVersion: &quot;descheduler/v1alpha1&quot;
+kind: &quot;DeschedulerPolicy&quot;
+strategies:
+  &quot;LowNodeUtilization&quot;:
+    enabled: true
+    params:
+      nodeResourceUtilizationThresholds:
+        thresholds:
+          &quot;cpu&quot; : 20
+          &quot;memory&quot;: 20
+          &quot;pods&quot;: 20
+        targetThresholds:
+          &quot;cpu&quot; : 50
+          &quot;memory&quot;: 50
+          &quot;pods&quot;: 50
+
+</code></pre><h3 id="13-highnodeutilization">1.3. HighNodeUtilization</h3>
+<p>该策略会将 <code>低利用率节点</code> 上的 pod 驱逐到 <code>高利用率节点</code> 上。该策略必须和 k8s 默认调度器策略中的优选策略 <code>MostRequestedPriority</code> 配合一起使用，在进行驱逐重调度时会给<code>高利用率的节点打上高分</code>。该策略的参数都配置在 <code>nodeResourceUtilizationThresholds</code> 下。</p>
+<p>该策略也通过参数 <code>thresholds</code> 的阀值来确定哪些节点是 <code>低利用率的节点</code>，它所支持的资源类型包括 cpu、memory、pods 数量以及扩展资源类型等，当节点相关资源的实际申请使用率（以 k8s 中的 request 为准）<strong>都低于</strong> 参数阀值 <code>thresholds</code> 中 <strong>所有</strong> 相关资源所设定的值时，该节点会给认为是 <code>低利用率的节点</code>（未充分利用的节点）。节点中只要<strong>任一一个</strong>资源的使用率大于阀值 <code>thresholds</code> 中的同类型资源的值时，该节点被认为合理利用的节点，该节点上的 pod 将不会被驱逐。</p>
+<p>注意，该策略是将 pod 的从 <code>低利用率的节点</code> 上驱逐并在合适的 <code>高利用率的节点</code> 上重建。当 <code>高利用率的节点</code> 或者 <code>未充分利用的节点</code> 的节点数中有一个为 0 时将不再执行驱逐策略驱逐 pod。</p>
+<p>参数：</p>
+<ul>
+<li>
+<p>普通参数：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">Name</th>
+<th style="text-align:center">Type</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">thresholds</td>
+<td style="text-align:center">map[string]int</td>
+<td style="text-align:left">同上，设定阀值，确定 <code>未充分利用节点</code> 的界限</td>
+</tr>
+<tr>
+<td style="text-align:center">numberOfNodes</td>
+<td style="text-align:center">int</td>
+<td style="text-align:left">同上，在大集群中确定开启该策略的阀值</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>
+<p>过滤型参数：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">Name</th>
+<th style="text-align:center">Type</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">thresholdPriority</td>
+<td style="text-align:center">int</td>
+<td style="text-align:left">同上</td>
+</tr>
+<tr>
+<td style="text-align:center">thresholdPriorityClassName</td>
+<td style="text-align:center">string</td>
+<td style="text-align:left">同上</td>
+</tr>
+<tr>
+<td style="text-align:center">nodeFit</td>
+<td style="text-align:center">bool</td>
+<td style="text-align:left">同上</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<p>说明：</p>
+<ul>
+<li>与 <code>LowNodeUtilization</code> 策略一样，该策略原生也支持 cpu、memory、pods 数量三种原生资源类型。如果资源类型未指定默认设置为 100%。</li>
+<li>该策略也同样支持扩展资源（如 gpu 资源 <code>nvidia.com/gpu</code>），如果用户未指定扩展资源，该资源同样不参数 node 节点资源使用量的计算。</li>
+<li>阀值 <code>thresholds</code> 同样不能为空。其资源的有效值为[0,100]。</li>
+<li>numberOfNodes：参数用来触发是否开启该策略，如果 <code>未充分利用的节点数</code> 大于 numberOfNodes 时，将激活该策略，启动驱逐功能。否则，不启动该策略，numberOfNodes 的默认值为 0。</li>
+<li>该策略是将 pod 从 <code>低利用率的节点</code> 上往 <code>高利用率的节点</code> 调，会让高利用率的节点利用率更高，低利用率的节点更低。该策略正好与 <code>LowNodeUtilization</code> 相反。</li>
+</ul>
+<p>例子</p>
+<pre><code>apiVersion: &quot;descheduler/v1alpha1&quot;
+kind: &quot;DeschedulerPolicy&quot;
+strategies:
+  &quot;HighNodeUtilization&quot;:
+     enabled: true
+     params:
+       nodeResourceUtilizationThresholds:
+         thresholds:
+           &quot;cpu&quot; : 20
+           &quot;memory&quot;: 20
+           &quot;pods&quot;: 20
+
+</code></pre><h3 id="14-removepodsviolatinginterpodantiaffinity">1.4. RemovePodsViolatingInterPodAntiAffinity</h3>
+<p>该策略会确保同一个节点上的 pod 之间不违背 pod 的亲和性，如果同一个节点上 pod 之间存在反亲和性，则会将相关 pod 驱逐掉。比如，如果 node 上同时运行 podA、podB、podC 三个pod，podA 与 podB 和 podC 之间存在反亲和性，则该策略会将 podA 驱逐掉，以保证 podB 和 podC 能在 node 上正常运行。</p>
+<p>参数</p>
+<ul>
+<li>过滤型参数
+<table>
+<thead>
+<tr>
+<th style="text-align:center">Name</th>
+<th style="text-align:center">Type</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">thresholdPriority</td>
+<td style="text-align:center">int</td>
+<td style="text-align:left">同上</td>
+</tr>
+<tr>
+<td style="text-align:center">thresholdPriorityClassName</td>
+<td style="text-align:center">string</td>
+<td style="text-align:left">同上</td>
+</tr>
+<tr>
+<td style="text-align:center">namespaces</td>
+<td style="text-align:center">list</td>
+<td style="text-align:left">指定操作 namespace</td>
+</tr>
+<tr>
+<td style="text-align:center">labelSelector</td>
+<td style="text-align:center"></td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:center">nodeFit</td>
+<td style="text-align:center">bool</td>
+<td style="text-align:left">同上</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<p>例子</p>
+<pre><code>apiVersion: &quot;descheduler/v1alpha1&quot;
+kind: &quot;DeschedulerPolicy&quot;
+strategies:
+  &quot;RemovePodsViolatingInterPodAntiAffinity&quot;:
+     enabled: true
+</code></pre><h3 id="15-removepodsviolatingnodeaffinity">1.5. RemovePodsViolatingNodeAffinity</h3>
+<p>该策略可以确保将所有违背 <code>节点亲和性</code> 的 pods 都从该 node 节点驱逐掉。在 k8s 中 <code>node 亲和性</code> 可通过参数<code>requiredDuringSchedulingIgnoredDuringExecution</code> 来指定，表示 <code>调度时调度器必须满足条件，执行时 kubelet 可忽略（即kubelet 不执行驱逐）</code> 策略。在开始是某个 podA 满足调度策略，k8s 调度器能将该 podA 调度到该 node 节点上，但随着一段时间后，podA 不在满足 node 的亲和性，此时传统的 k8s 机制 kubelet 是不能驱逐掉 podA 的；但当开启该策略时，该策略会驱使 kubelet 执行驱逐动作，使 node 上的有 <code>requiredDuringSchedulingIgnoredDuringExecution</code> 标签且有违反该 node 亲和性的 pod 将会被驱逐。</p>
+<p>参数：</p>
+<ul>
+<li>
+<p>普通参数：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">Name</th>
+<th style="text-align:center">Type</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">nodeAffinityType</td>
+<td style="text-align:center">list(string)</td>
+<td style="text-align:left">指明 pod 违背 node 的哪些亲和性类型，最终使 kubelet 执行驱逐动作</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>
+<p>过滤型参数</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">Name</th>
+<th style="text-align:center">Type</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">thresholdPriority</td>
+<td style="text-align:center">int</td>
+<td style="text-align:left">同上</td>
+</tr>
+<tr>
+<td style="text-align:center">thresholdPriorityClassName</td>
+<td style="text-align:center">string</td>
+<td style="text-align:left">同上</td>
+</tr>
+<tr>
+<td style="text-align:center">namespaces</td>
+<td style="text-align:center">list</td>
+<td style="text-align:left">include/exclude两个方案</td>
+</tr>
+<tr>
+<td style="text-align:center">labelSelector</td>
+<td style="text-align:center">list</td>
+<td style="text-align:left">同k8s</td>
+</tr>
+<tr>
+<td style="text-align:center">nodeFit</td>
+<td style="text-align:center">bool</td>
+<td style="text-align:left">同上</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<p>例子</p>
+<pre><code>apiVersion: &quot;descheduler/v1alpha1&quot;
+kind: &quot;DeschedulerPolicy&quot;
+strategies:
+  &quot;RemovePodsViolatingNodeAffinity&quot;:
+    enabled: true
+    params:
+      nodeAffinityType:
+      - &quot;requiredDuringSchedulingIgnoredDuringExecution&quot;
+
+</code></pre><h3 id="16-removepodsviolatingnodetaints">1.6. RemovePodsViolatingNodeTaints</h3>
+<p>该策略会对违反 <code>node taints 污点</code>的 pod 进行驱逐。比如，在 pod 调度开始时，node 上含有污点 <code>NoSchedule</code>，且 podA 中也含有容忍(toleration) node 污点的标签 <code>key=value:NoSchedule</code>，此时该 podA 能被调度到 node 上运行，kubelet 也不会驱逐该 podA。随着一段时间后，将 node 上的污点更新了或者移除了等情况下，在原有 k8s 上 kubelet 不能将 pod 驱逐掉。如果开启该策略将会使 kubelet 去驱逐 podA。</p>
+<p>参数：</p>
+<ul>
+<li>过滤型参数：
+<table>
+<thead>
+<tr>
+<th style="text-align:center">Name</th>
+<th style="text-align:center">Type</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">thresholdPriority</td>
+<td style="text-align:center">int</td>
+<td style="text-align:left">同上</td>
+</tr>
+<tr>
+<td style="text-align:center">thresholdPriorityClassName</td>
+<td style="text-align:center">string</td>
+<td style="text-align:left">同上</td>
+</tr>
+<tr>
+<td style="text-align:center">namespaces</td>
+<td style="text-align:center"></td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:center">labelSelector</td>
+<td style="text-align:center"></td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:center">nodeFit</td>
+<td style="text-align:center">bool</td>
+<td style="text-align:left">同上</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<p>例子</p>
+<pre><code>apiVersion: &quot;descheduler/v1alpha1&quot;
+kind: &quot;DeschedulerPolicy&quot;
+strategies:
+  &quot;RemovePodsViolatingNodeTaints&quot;:
+    enabled: true
+
+</code></pre><h3 id="17-removepodsviolatingtopologyspreadconstraint">1.7. RemovePodsViolatingTopologySpreadConstraint</h3>
+<p>该策略会对违反拓扑约束关系的 pod 从 node 上驱逐，以达到在k8s 中多个域之间平台 pod 数量的要求，以便实现 pods 之间更细粒度的调度，方便实现容灾和高可用。 topologySpreadConstraints 表示拓扑分布约束，可以控制 Pod 在某些节点的分布，可以在多个域之间平衡 Pod 数量，topologySpreadConstraints 策略是在 k8s v1.16第一次提出，在 v1.18 进入beta版默认开启，具体详情可参考 k8s v1.18 官方说明。因此该策略只在 k8s <code>v1.18</code> 以上版本中可用。</p>
+<p>说明：</p>
+<ul>
+<li>该策略默认只处理<code>硬约束（hard constraints）</code>的条件，如果要处理 <code>软约束（soft constraints）</code>的条件，需要将参数 <code>includeSoftConstraints</code> 设置为 <code>true</code>。</li>
+<li>该策略中的参数 <code>labelSelector</code> 在 <code>处理拓扑平衡域</code> 时不会生效，它只会在 驱逐 pod 阶段或者决定哪个 pod 可被驱逐时才生效。</li>
+</ul>
+<p>参数：</p>
+<ul>
+<li>
+<p>普通参数：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Name</th>
+<th style="text-align:center">Type</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">includeSoftConstraints</td>
+<td style="text-align:center">bool</td>
+<td style="text-align:left">默认不开启，如要开启需要设为 <code>true</code></td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>
+<p>过滤型参数：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Name</th>
+<th style="text-align:center">Type</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">thresholdPriority</td>
+<td style="text-align:center">int</td>
+<td style="text-align:left">同上</td>
+</tr>
+<tr>
+<td style="text-align:left">thresholdPriorityClassName</td>
+<td style="text-align:center">string</td>
+<td style="text-align:left">同上</td>
+</tr>
+<tr>
+<td style="text-align:left">namespaces</td>
+<td style="text-align:center"></td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">labelSelector</td>
+<td style="text-align:center"></td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">nodeFit</td>
+<td style="text-align:center">bool</td>
+<td style="text-align:left">同上</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<p>例子</p>
+<pre><code>apiVersion: &quot;descheduler/v1alpha1&quot;
+kind: &quot;DeschedulerPolicy&quot;
+strategies:
+  &quot;RemovePodsViolatingTopologySpreadConstraint&quot;:
+     enabled: true
+     params:
+       includeSoftConstraints: false
+
+</code></pre><h3 id="18-removepodshavingtoomanyrestarts">1.8. RemovePodsHavingTooManyRestarts</h3>
+<p>该策略会对 pod 重启次数太多的时候将 pod 驱逐，pod 重启原因有很多种，有因为 pod 的健康检查而一直重启，也有因为挂载卷不成功或者其他因素导致的 pod 重启，也有可能是 pod 所在的 node 因素导致的等，这种情况下该策略可将 pod 驱逐重建。</p>
+<p>参数</p>
+<ul>
+<li>
+<p>普通参数：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">Name</th>
+<th style="text-align:center">Type</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">podRestartThreshold</td>
+<td style="text-align:center">int</td>
+<td style="text-align:left">指定 pod 重启次数的阀值，当 pod 的重启次数大于该值时，将执行驱逐策略</td>
+</tr>
+<tr>
+<td style="text-align:center">includingInitContainers</td>
+<td style="text-align:center">bool</td>
+<td style="text-align:left">计算 pod 的重启次数时，是否将 init container 的重启次数计算进去</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>
+<p>过滤型参数：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">Name</th>
+<th style="text-align:center">Type</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">thresholdPriority</td>
+<td style="text-align:center">int</td>
+<td style="text-align:left">同上</td>
+</tr>
+<tr>
+<td style="text-align:center">thresholdPriorityClassName</td>
+<td style="text-align:center">string</td>
+<td style="text-align:left">同上</td>
+</tr>
+<tr>
+<td style="text-align:center">namespaces</td>
+<td style="text-align:center"></td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:center">labelSelector</td>
+<td style="text-align:center"></td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:center">nodeFit</td>
+<td style="text-align:center">bool</td>
+<td style="text-align:left">同上</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<p>例子</p>
+<pre><code>apiVersion: &quot;descheduler/v1alpha1&quot;
+kind: &quot;DeschedulerPolicy&quot;
+strategies:
+  &quot;RemovePodsHavingTooManyRestarts&quot;:
+     enabled: true
+     params:
+       podsHavingTooManyRestarts:
+         podRestartThreshold: 100
+         includingInitContainers: true
+
+</code></pre><h3 id="19-podlifetime">1.9. PodLifeTime</h3>
+<p>该策略会驱逐长时间运行中的 pod，即根据设定的阀值以及 pod 的生命时长来决定是否驱逐 pod。目前仅支持对两种状态的 pod 进行驱逐，即 running 或 pending 状态的 pod。</p>
+<p>参数</p>
+<ul>
+<li>
+<p>普通参数：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">Name</th>
+<th style="text-align:center">Type</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">maxPodLifeTimeSeconds</td>
+<td style="text-align:center">int</td>
+<td style="text-align:left">设定 pod 生命时长的驱逐阀值，该策略会驱逐大于该阀值的 pod</td>
+</tr>
+<tr>
+<td style="text-align:center">podStatusPhases</td>
+<td style="text-align:center">list</td>
+<td style="text-align:left">指定可驱逐 pod 的状态，目前只支持驱逐状态为 running 和 pending 的 pod</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>
+<p>过滤型参数</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">Name</th>
+<th style="text-align:center">Type</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">thresholdPriority</td>
+<td style="text-align:center">int</td>
+<td style="text-align:left">同上</td>
+</tr>
+<tr>
+<td style="text-align:center">thresholdPriorityClassName</td>
+<td style="text-align:center">string</td>
+<td style="text-align:left">同上</td>
+</tr>
+<tr>
+<td style="text-align:center">namespaces</td>
+<td style="text-align:center"></td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:center">labelSelector</td>
+<td style="text-align:center"></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<p>例子</p>
+<pre><code>apiVersion: &quot;descheduler/v1alpha1&quot;
+kind: &quot;DeschedulerPolicy&quot;
+strategies:
+  &quot;PodLifeTime&quot;:
+     enabled: true
+     params:
+       podLifeTime:
+         maxPodLifeTimeSeconds: 86400
+         podStatusPhases:
+         - &quot;Pending&quot;
+</code></pre><h2 id="2-pods-过滤参数详解">2. Pods 过滤参数详解</h2>
+<h3 id="21-namespace-过滤">2.1. Namespace 过滤</h3>
+<p>Descheduler 中的策略可以通过 namespaces 参数来过滤以决定这些策略可以在哪些 namespaces 中生效或者。基于 namespaces 过滤方法共有两种，即 include 和 exclude 方法，include 表示策略可以在指定的 namespaces 中生效，而 exclude 则表示 <strong>排除</strong> 指定的 namespaces 后，策略可在其他 namespaces 中生效。如下策略支持 namespaces 过滤：</p>
+<ul>
+<li>PodLifeTime</li>
+<li>RemovePodsHavingTooManyRestarts</li>
+<li>RemovePodsViolatingNodeTaints</li>
+<li>RemovePodsViolatingNodeAffinity</li>
+<li>RemovePodsViolatingInterPodAntiAffinity</li>
+<li>RemoveDuplicates</li>
+<li>RemovePodsViolatingTopologySpreadConstraint</li>
+</ul>
+<p>如：</p>
+<pre><code>apiVersion: &quot;descheduler/v1alpha1&quot;
+kind: &quot;DeschedulerPolicy&quot;
+strategies:
+  &quot;PodLifeTime&quot;:
+     enabled: true
+     params:
+        podLifeTime:
+          maxPodLifeTimeSeconds: 86400
+        namespaces:
+          include:
+          - &quot;namespace1&quot;
+          - &quot;namespace2&quot;
+</code></pre><p>表示 <code>PodLifeTime</code> 策略仅在 <code>namespace1</code> 和 <code>namespace2</code> 中生效。</p>
+<pre><code>apiVersion: &quot;descheduler/v1alpha1&quot;
+kind: &quot;DeschedulerPolicy&quot;
+strategies:
+  &quot;PodLifeTime&quot;:
+     enabled: true
+     params:
+        podLifeTime:
+          maxPodLifeTimeSeconds: 86400
+        namespaces:
+          exclude:
+          - &quot;namespace1&quot;
+          - &quot;namespace2&quot;
+</code></pre><p>表示 <code>PodLifeTime</code> 策略可在 <strong>除了</strong> <code>namespace1</code> 和 <code>namespace2</code> 的其他所有 namespaces 中生效。</p>
+<h3 id="22-priority-优先级过滤">2.2. Priority 优先级过滤</h3>
+<p>Descheduler 中的 <code>所有策略</code> 都可以指定 <code>优先级过滤</code>，优先级策略通过一个优先级阀值来指定，只有当 pod 的优先级值<strong>小于</strong>该阀值时才能被 Descheduler 驱逐。有两种方式来指定优先级策略（默认情况下通过 <code>system-cluster-critical</code> priorityClass 来指定优先级的阀值。）：</p>
+<ul>
+<li><code>thresholdPriority</code>：直接通过一个 int 数值来指定。</li>
+<li><code>thresholdPriorityClassName</code>：通过 k8s 的 <code> priority class</code> 来进行关联，<code> priority class</code> 中具体会指定优先级的数值。如果策略中指定的 <code>priority class</code> 在 k8s 集群中没有创建（不存在），则会直接报错。</li>
+<li><strong>注意</strong>：上述两个优先级只能使用其中一种。在一个策略中不能同时指定上述两种优先级。</li>
+<li><strong>注意</strong>：如果 <code>evictSystemCriticalPods</code> 设置为 <code>true</code>，将会驱逐系统关键 pod，且设置的所有 <code>优先级策略</code> 都将 <strong>无效</strong>。</li>
+</ul>
+<p>例子</p>
+<ul>
+<li>
+<p><code>thresholdPriority</code> 方式：</p>
+<pre><code>apiVersion: &quot;descheduler/v1alpha1&quot;
+kind: &quot;DeschedulerPolicy&quot;
+strategies:
+  &quot;PodLifeTime&quot;:
+    enabled: true
+    params:
+        podLifeTime:
+          maxPodLifeTimeSeconds: 86400
+        thresholdPriority: 10000
+</code></pre></li>
+<li>
+<p><code>thresholdPriorityClassName</code> 方式：</p>
+<pre><code>apiVersion: &quot;descheduler/v1alpha1&quot;
+kind: &quot;DeschedulerPolicy&quot;
+strategies:
+  &quot;PodLifeTime&quot;:
+    enabled: true
+    params:
+        podLifeTime:
+          maxPodLifeTimeSeconds: 86400
+        thresholdPriorityClassName: &quot;priorityclass1&quot;
+</code></pre></li>
+</ul>
+<h3 id="23-label-标签过滤">2.3. Label 标签过滤</h3>
+<p>如下策略支持通过 k8s 的标准标签过滤器（<code>labelSelector</code>）来过滤需要驱逐指定的 pod。</p>
+<ul>
+<li>PodLifeTime</li>
+<li>RemovePodsHavingTooManyRestarts</li>
+<li>RemovePodsViolatingNodeTaints</li>
+<li>RemovePodsViolatingNodeAffinity</li>
+<li>RemovePodsViolatingInterPodAntiAffinity</li>
+<li>RemovePodsViolatingTopologySpreadConstraint</li>
+</ul>
+<p>例子</p>
+<pre><code>apiVersion: &quot;descheduler/v1alpha1&quot;
+kind: &quot;DeschedulerPolicy&quot;
+strategies:
+  &quot;PodLifeTime&quot;:
+    enabled: true
+    params:
+      podLifeTime:
+        maxPodLifeTimeSeconds: 86400
+      labelSelector:
+        matchLabels:
+          component: redis
+        matchExpressions:
+          - {key: tier, operator: In, values: [cache]}
+          - {key: environment, operator: NotIn, values: [dev]}
+</code></pre><h3 id="24-node-fit-过滤">2.4. Node fit 过滤</h3>
+<p>Descheduler 中以下策略支持 nodeFit 过滤来优化驱逐调度的选择。</p>
+<ul>
+<li>RemoveDuplicates</li>
+<li>LowNodeUtilization</li>
+<li>HighNodeUtilization</li>
+<li>RemovePodsViolatingInterPodAntiAffinity</li>
+<li>RemovePodsViolatingNodeAffinity</li>
+<li>RemovePodsViolatingNodeTaints</li>
+<li>RemovePodsViolatingTopologySpreadConstraint</li>
+<li>RemovePodsHavingTooManyRestarts</li>
+</ul>
+<p>如果 nodeFit 为 <code>true</code>，则 descheduler 在驱逐 pod 时会考虑驱逐的 pod 是否满足可驱逐的标准，并且可驱逐的 pod 是否可以重新调度到其他 node 节点上，如果 pod 不能重新调度到其他 node 节点上，则不会驱逐该 pod。当前 pod 是否可驱逐的标准如下：</p>
+<ul>
+<li>pod 中是否有 nodeSelector 标签选择器</li>
+<li>pod 中有可容忍 node 的污点，即 pod 中有 <code>Tolerations</code> 标签， node 有对应的 <code>Taints</code> 标签</li>
+<li>pod 中有 <code>nodeAffinity</code></li>
+<li>是否有其他 node 节点被标记为 <code>unschedulable</code></li>
+</ul>
+<p><strong>注意</strong>：<code>nodeFit</code> 过滤是基于 pod 的 spec 进行过滤的，并不会关联 pod 的 <code>owner</code>；如果 pod 的 owner（比如 RC 等）被修改了但 pod 的 spec 未被修改，这时 nodeFit 的过滤将会引用 pod 旧的 spec 信息。 这种行为在 Descheduler 中时可允许的或者说不严重的，因为 Descheduler 的机制是 <code>尽最大努力</code> 来进行资源的再度平衡。当然如果想实时得到 pod 的最新信息，可以使用 <code>Deployment</code> 来代替 RC，Deployment 会实现自动同步更新 pod 的 spec 的功能，以保证集群中 pod 的最新信息。</p>
+<h2 id="3-pod-驱逐说明">3. Pod 驱逐说明</h2>
+<p>Descheduler 中从 node 中驱逐一个 pod 必须遵守以下机制：</p>
+<ul>
+<li><code>Critical pods</code>：通过 <code>PriorityClassName</code> 设置的 <code>system-cluster-critical</code> 或者 <code>system-node-critical</code> 关键性 pod 永远不会被驱逐，除非将 <code>evictSystemCriticalPods</code> 设置为 <code>true</code>。</li>
+<li><code>静态 pod</code>、<code>kubelet 直接用镜像启动的pod</code>、<code>孤儿 pod</code> 等不被 ReplicationController, ReplicaSet(Deployment), StatefulSet, or Job 等控制器管理的 pod 永远不会被驱逐。因为一旦驱逐了，这些 pod 将永远不会被拉起来。</li>
+<li>被 DaemonSets 管理的 pod 永远不会被驱逐。</li>
+<li>pod 中使用本地存储卷的（local storage）不会被驱逐，除非将 <code>evictLocalStoragePods</code> 设为 <code>true</code>。</li>
+<li>pod 中使用 PVCs 的默认是可以被驱逐的，可通过设置 <code>ignorePvcPods</code> 为 <code>true</code> 来保证 <strong>不被</strong> 驱逐。</li>
+<li>在 <code>LowNodeUtilization</code> 和 <code>RemovePodsViolatingInterPodAntiAffinity</code> 中，pod 的驱逐优先级是从低到高，当 pod 之间的优先级相同时，会根据 k8s 的 Qos 等级来进行驱逐，即 <code>best effort</code> 先驱逐，其次 <code> burstable</code>，最后 <code>guaranteed</code>。</li>
+<li>所有 pod 中如果有<code>注释:descheduler.alpha.kubernetes.io/evict</code>，则表明该 pod 可以被驱逐。这种情况下，用户可根据需求以及 pod 的信息来特定指定可驱逐的 pod。</li>
+</ul>
+<h2 id="4-其他">4. 其他：</h2>
+<ul>
+<li>设置 &ndash;v=4 或者更大的值，Descheduler 的日志中会打印出任一 pod 不能被驱逐的原因。</li>
+<li>Descheduler 的驱逐信息可通过 <code> https://localhost:10258/metrics</code> 地址进行查看，地址可以通过参数 <code>--binding-address</code> 更改，基于 https的安全端口号可以通过参数 <code>--secure-port</code> 更改。
+<table>
+<thead>
+<tr>
+<th style="text-align:center">name</th>
+<th style="text-align:center">type</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">build_info</td>
+<td style="text-align:center">gauge</td>
+<td style="text-align:left">constant 1</td>
+</tr>
+<tr>
+<td style="text-align:center">pods_evicted</td>
+<td style="text-align:center">CounterVec</td>
+<td style="text-align:left">total number of pods evicted</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+
+
+                
+                
+<div class="entry-shang text-center">
+    
+	    <p> 「如果这篇文章对你有用,请随意打赏」</p>
+	
+	<button class="zs show-zs btn btn-bred">赞赏支持</button>
 </div>
+<div class="zs-modal-bg"></div>
+<div class="zs-modal-box">
+	<div class="zs-modal-head">
+		<button type="button" class="close">×</button>
+		<span class="author"><a href="https://qingwei9.github.io/"><img src="/img/favicon.png" />Qingwei Blog</a></span>
+        
+	        <p class="tip"><i></i><span>如果这篇文章对你有用,请随意打赏</span></p>
+		
+ 
+	</div>
+	<div class="zs-modal-body">
+		<div class="zs-modal-btns">
+			<button class="btn btn-blink" data-num="2">2元</button>
+			<button class="btn btn-blink" data-num="5">5元</button>
+			<button class="btn btn-blink" data-num="10">10元</button>
+			<button class="btn btn-blink" data-num="50">50元</button>
+			<button class="btn btn-blink" data-num="100">100元</button>
+			<button class="btn btn-blink" data-num="1">任意金额</button>
+		</div>
+		<div class="zs-modal-pay">
+			<button class="btn btn-bred" id="pay-text">2元</button>
+			<p>使用<span id="pay-type">微信</span>扫描二维码完成支付</p>
+			<img src="/img/reward/wechat-2.png"  id="pay-image"/>
+		</div>
+	</div>
+	<div class="zs-modal-footer">
+		<label><input type="radio" name="zs-type" value="wechat" class="zs-type" checked="checked"><span ><span class="zs-wechat"><img src="/img/reward/wechat-btn.png"/></span></label>
+		<label><input type="radio" name="zs-type" value="alipay" class="zs-type" class="zs-alipay"><img src="/img/reward/alipay-btn.png"/></span></label>
+	</div>
+</div>
+<script type="text/javascript" src="/js/reward.js"></script>
 
-<head><style type="text/css">
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-thumb {
-  height: 40px;
-  background-color: #eee;
-  border-radius: 16px;
-  &:hover {
-    background-color: #ddd;
-  }
-}
-</style></head>
+                
+
+                <hr>
+                <ul class="pager">
+                    
+                    
+                </ul>
+
+                
+<div id="disqus-comment"></div>
+
+
+
+            </div>
+            
+            <div class="
+                col-lg-11 col-lg-offset-1
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                        
+                        
+                        
+                    </div>
+                </section>
+                
+
+                
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                   
+                   <li>
+                       <a href='' rel="alternate" type="application/rss+xml" title="Qingwei Blog" >
+                           <span class="fa-stack fa-lg">
+                               <i class="fas fa-circle fa-stack-2x"></i>
+                               <i class="fas fa-rss fa-stack-1x fa-inverse"></i>
+                           </span>
+                       </a>
+                   </li>
+                   
+                    
+                    <li>
+                        <a href="mailto:youremail@gmail.com">
+                            <span class="fa-stack fa-lg">
+                                <i class="fas fa-circle fa-stack-2x"></i>
+                                <i class="fas fa-envelope fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+		    
+
+                    
+                    
+                    
+
+                    
+
+		    
+                    
+                    <li>
+                        <a target="_blank" href="/your%20wechat%20qr%20code%20image">
+                            <span class="fa-stack fa-lg">
+                                <i class="fas fa-circle fa-stack-2x"></i>
+                                <i class="fab fa-wechat fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+		    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/yourgithub">
+                            <span class="fa-stack fa-lg">
+                                <i class="fas fa-circle fa-stack-2x"></i>
+                                <i class="fab fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+		    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://www.linkedin.com/in/yourlinkedinid">
+                            <span class="fa-stack fa-lg">
+                                <i class="fas fa-circle fa-stack-2x"></i>
+                                <i class="fab fa-linkedin fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+		    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://stackoverflow.com/users/yourstackoverflowid">
+                            <span class="fa-stack fa-lg">
+                                <i class="fas fa-circle fa-stack-2x"></i>
+                                <i class="fab fa-stack-overflow fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+            
+                    
+                    
+                    
+            
+            
+            
+                </ul>
+		<p class="copyright text-muted">
+                    Copyright &copy; Qingwei Blog 2021
+                    <br>
+                    <a href="https://themes.gohugo.io/hugo-theme-cleanwhite">CleanWhite Hugo Theme</a> by <a href="https://zhaohuabing.com">Huabing</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=zhaohuabing&repo=hugo-theme-cleanwhite&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+
+
+
+<script>
+    function loadAsync(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+
+
+
+
+<script>
+    
+    if($('#tag_cloud').length !== 0){
+        loadAsync("/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+
+<script>
+    loadAsync("https://cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+
+
+
+
+</body>
+</html>
