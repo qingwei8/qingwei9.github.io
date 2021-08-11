@@ -1,6 +1,6 @@
-# qingwei9.github.io
+# qingwei9.github.io（暂时弃用，正使用 hexo 搭建的）
 
-qingwei's blog
+qingwei's blog 
 
 hugo 部署
 
